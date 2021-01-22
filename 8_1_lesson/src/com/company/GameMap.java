@@ -31,22 +31,28 @@ public class GameMap extends JPanel {
     private static final int STATE_WIN_HUMAN3 = 3;// выиграл человек 2
 
 
-
+//Объявление переменных
     private boolean isGameOver; // флаг конца игры
     private boolean initializedMap; // флаг инициализации загрузки ? карты
 
     private int stateGameOver;
 
     public static final Random RANDOM = new Random();
-//Размеры поля, длина выигрышной позиции и размеры ячеек поля
+    //Размеры поля, длина выигрышной позиции и размеры ячеек поля
     private int fieldSizeX;
     private int fieldSizeY;
     private int winLength;
-//! добавила mode - тип игры:
+    //! добавила mode - тип игры:
     private int mode;
+    //! добавила переменную счетчик ходов:
+    private int numMove = 0;
+    //! переменную № игрока:
+    private int dotHuman = DOT_HUMAN1; //1 начальное значение
+    //! и проверка состояния победы игрока
+    private int stateWinHuman = STATE_WIN_HUMAN1; //1
 
     private int[][] field;
-//
+    //
     private int cellWidth;
     private int cellHeight;
 
@@ -106,9 +112,20 @@ public class GameMap extends JPanel {
             return;
         }
         field[cellY][cellX] = DOT_HUMAN1;
+        dotHuman = DOT_HUMAN1;
+        stateWinHuman = STATE_WIN_HUMAN1;
+        if (mode == GAME_MODE_HVH) {
+            numMove++;
+            if( numMove % 2 == 0 ){
+                field[cellY][cellX] = DOT_HUMAN3;
+                dotHuman = DOT_HUMAN3;
+                stateWinHuman = STATE_WIN_HUMAN3;
 
-        if (checkWin(DOT_HUMAN1)) {
-            setGameOver(STATE_WIN_HUMAN1); //победил человек
+            }
+        }
+
+        if (checkWin(dotHuman)) {
+            setGameOver(stateWinHuman); //победил человек
             return;
         }
 
@@ -127,32 +144,31 @@ public class GameMap extends JPanel {
                 setGameOver(STATE_DRAW);
                 return;
             }
-        } else if (mode == GAME_MODE_HVH) {
-           repaint();
-            if (!initializedMap) return;
-            if (isGameOver) return;
-            cellX = e.getX() / cellWidth; //вычисляем номер столбца
-            cellY = e.getY() / cellHeight; // и номер строки
-            //если невалидная или не пустая ячейка:
-            if (!isValidCell(cellX, cellY) || !isEmptyCell(cellX, cellY)) {
-                return;
-            }
-            field[cellY][cellX] = DOT_HUMAN3;
-            repaint();
-            if (checkWin(DOT_HUMAN3)) {
-                setGameOver(STATE_WIN_HUMAN3); //победил человек
-                return;
-            }
-
-            if (isFullMap()) {
-                setGameOver(STATE_DRAW); //ничья
-                return;
-            }
-
         }
-
-
-
+        repaint();
+//        else if (mode == GAME_MODE_HVH) {
+//           repaint();
+//            if (!initializedMap) return;
+//            if (isGameOver) return;
+//            cellX = e.getX() / cellWidth; //вычисляем номер столбца
+//            cellY = e.getY() / cellHeight; // и номер строки
+//            //если невалидная или не пустая ячейка:
+//            if (!isValidCell(cellX, cellY) || !isEmptyCell(cellX, cellY)) {
+//                return;
+//            }
+//            field[cellY][cellX] = DOT_HUMAN3;
+//            repaint();
+//            if (checkWin(DOT_HUMAN3)) {
+//                setGameOver(STATE_WIN_HUMAN3); //победил человек
+//                return;
+//            }
+//
+//            if (isFullMap()) {
+//                setGameOver(STATE_DRAW); //ничья
+//                return;
+//            }
+//
+//        }
     }
 // Метод отрисовки поля
     private void render(Graphics g) {
@@ -164,7 +180,7 @@ public class GameMap extends JPanel {
         cellWidth = width / fieldSizeX;
         cellHeight = height / fieldSizeY;
         g.setColor(Color.WHITE);
-
+    // Рисуем заново решетку поля:
         for (int i = 0; i < fieldSizeY ; i++) {
             int y = i * cellHeight;
             g.drawLine(0,y,width,y);
@@ -174,14 +190,13 @@ public class GameMap extends JPanel {
             int x = i * cellWidth;
             g.drawLine(x,0, x, height);
         }
-
+    // поверяем все клетки на содержимое:
         for (int y = 0; y < fieldSizeY; y++) {
             for (int x = 0; x < fieldSizeX; x++) {
-
                 if (isEmptyCell(x,y)) {
                     continue;
                 }
-
+            //расставляем крестики-нолики (кружочки) согласно содержимому массива field:
                 if (field[y][x] == DOT_HUMAN1) {
                     g.setColor(new Color(1,1,255));
                     g.fillOval(x * cellWidth, y * cellHeight, cellWidth, cellHeight);
